@@ -1,7 +1,6 @@
 import { GenezioDeploy } from "@genezio/types";
 import { postgresURL } from "../config/development";
 import {
-  CreateTaskRequest,
   CreateTaskRequestPostgres,
   CreateTaskResponse,
   DeleteTaskResponse,
