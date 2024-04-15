@@ -1,30 +1,94 @@
-import MongoRepository from "../repositories/mongo";
-import { Task } from "../models/mongooseModel";
+import { Task, taskSchema } from "../db/mongooseModel";
+import { GenezioDeploy } from "@genezio/types";
+import mongoose, { Model } from "mongoose";
+import { mongoURL } from "../config/envHandler";
+import {
+  CreateTaskRequest,
+  CreateTaskResponse,
+  DeleteTaskResponse,
+  GetTasksResponse,
+  UpdateTaskRequest,
+  UpdateTaskResponse,
+} from "../dtos/task";
 
+@GenezioDeploy()
 export class MongoService {
-  private taskRepository: MongoRepository;
+  private model: Model<any, any>;
 
-  constructor(taskRepository: MongoRepository) {
-    this.taskRepository = taskRepository;
+  constructor() {
+    mongoose.connect(mongoURL);
+    this.model = mongoose.connection.model("Task", taskSchema);
+  }
+  async createTask(task: CreateTaskRequest): Promise<CreateTaskResponse> {
+    // Implementation for creating a task
+    task.date = new Date();
+    let createdTask: Task;
+    try {
+      createdTask = await this.model.create(task);
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    return {
+      success: true,
+      task: createdTask,
+    };
   }
 
-  async createTask(task: Partial<Task>) {
-    // Implement create task logic here
-    return await this.taskRepository.create(task);
+  async readTasks(): Promise<GetTasksResponse> {
+    // Implementation for reading tasks
+    let tasks: Task[];
+    try {
+      tasks = await this.model.find().exec();
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+        tasks: [],
+      };
+    }
+    return {
+      success: true,
+      tasks: tasks,
+    };
   }
 
-  async readTasks() {
-    // Implement read tasks logic here
-    return await this.taskRepository.findAll();
+  async updateTask(
+    updatedTask: UpdateTaskRequest
+  ): Promise<UpdateTaskResponse> {
+    // Implementation for updating a task
+    updatedTask.date = new Date();
+    let updatedTaskResponse: Task;
+    try {
+      updatedTaskResponse = await this.model
+        .findByIdAndUpdate(updatedTask.id, updatedTask, { new: true })
+        .exec();
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    return {
+      success: true,
+      task: updatedTaskResponse,
+    };
   }
 
-  async updateTask(id: string, task: Partial<Task>) {
-    // Implement update task logic here
-    return await this.taskRepository.update(id, task);
-  }
-
-  async deleteTask(id: string) {
-    // Implement delete task logic here
-    return await this.taskRepository.delete(id);
+  async deleteTask(taskId: string): Promise<DeleteTaskResponse> {
+    // Implementation for deleting a task
+    try {
+      await this.model.findByIdAndDelete(taskId).exec();
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    return {
+      success: true,
+    };
   }
 }

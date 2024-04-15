@@ -1,4 +1,4 @@
-import { Task } from "../models/mongooseModel";
+import { Task } from "../db/mongooseModel";
 
 export function filterTasksByDate(tasks: Task[], date: Date) {
   return tasks.filter(

@@ -1,27 +1,24 @@
 import { GenezioDeploy, GenezioMethod } from "@genezio/types";
-import { MongoService } from "../services/mongoService";
-import MongoRepository from "../repositories/mongo";
-import mongoose from "mongoose";
-import { mongoURL } from "../config/development";
+import mongoose, { Model } from "mongoose";
+import { mongoURL } from "../config/envHandler";
 import { GetTasksResponse } from "../dtos/task";
+import { Task, taskSchema } from "../db/mongooseModel";
 
 @GenezioDeploy()
 export class MongoCrons {
-  private mongoService: MongoService;
+  private model: Model<any, any>;
 
   constructor() {
     mongoose.connect(mongoURL);
-    const db = mongoose.connection;
-    const repository = new MongoRepository(db);
-    this.mongoService = new MongoService(repository);
+    this.model = mongoose.connection.model("Task", taskSchema);
   }
 
   @GenezioMethod({ type: "cron", cronString: "* * * * *" })
   async readTasks(): Promise<GetTasksResponse> {
     // Implementation for reading tasks
-    let tasks;
+    let tasks: Task[];
     try {
-      tasks = await this.mongoService.readTasks();
+      tasks = await this.model.find().exec();
     } catch (error: any) {
       return {
         success: false,

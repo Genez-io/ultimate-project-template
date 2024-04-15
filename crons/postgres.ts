@@ -1,14 +1,13 @@
 import { GenezioDeploy, GenezioMethod } from "@genezio/types";
-import { postgresURL } from "../config/development";
-import { PostgresService } from "../services/postgresService";
-import { Sequelize } from "sequelize";
+import { postgresURL } from "../config/envHandler";
+import { DataTypes, ModelStatic, Sequelize } from "sequelize";
 import pg from "pg";
-import PostgresRepository from "../repositories/postgres";
 import { GetTasksResponse } from "../dtos/task";
+import { Task, TaskModel } from "../db/sequelizeModel";
 
 @GenezioDeploy()
-export class PostgresWebhooks {
-  private postgresService: PostgresService;
+export class PostgresCrons {
+  private model: ModelStatic<TaskModel>;
 
   constructor() {
     const db = new Sequelize(postgresURL, {
@@ -23,16 +22,31 @@ export class PostgresWebhooks {
         },
       },
     });
-    const repository = new PostgresRepository(db);
-    this.postgresService = new PostgresService(repository);
+    this.model = TaskModel.init(
+      {
+        taskId: {
+          type: DataTypes.INTEGER,
+          primaryKey: true,
+        },
+        title: DataTypes.STRING(512),
+        ownerId: DataTypes.STRING(512),
+        solved: DataTypes.BOOLEAN,
+        date: DataTypes.DATE,
+      },
+      {
+        sequelize: db,
+        modelName: "TaskModel",
+        tableName: "tasks",
+      }
+    );
   }
 
   @GenezioMethod({ type: "cron", cronString: "* * * * *" })
   async readTasks(): Promise<GetTasksResponse> {
     // Implementation for reading tasks
-    let tasks;
+    let tasks: Task[];
     try {
-      tasks = await this.postgresService.readTasks();
+      tasks = await this.model.findAll();
     } catch (error: any) {
       return {
         success: false,
