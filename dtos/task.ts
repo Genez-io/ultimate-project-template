@@ -4,7 +4,7 @@
 type CreateTaskRequest = {
   title: string;
   solved: boolean;
-  date: Date;
+  date?: Date;
 };
 
 // Create Task Request DTO

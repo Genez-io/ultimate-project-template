@@ -10,6 +10,8 @@ import {
   UpdateTaskRequest,
   UpdateTaskResponse,
 } from "../dtos/task";
+import { DateCheckerMiddleware } from "../middleware/dateChecker";
+import { ParameterCheckerMiddleware } from "../middleware/parameterChecker";
 
 @GenezioDeploy()
 export class MongoService {
@@ -19,6 +21,9 @@ export class MongoService {
     mongoose.connect(mongoURL);
     this.model = mongoose.connection.model("Task", taskSchema);
   }
+
+  @ParameterCheckerMiddleware()
+  @DateCheckerMiddleware()
   async createTask(task: CreateTaskRequest): Promise<CreateTaskResponse> {
     // Implementation for creating a task
     task.date = new Date();
@@ -37,6 +42,8 @@ export class MongoService {
     };
   }
 
+  @ParameterCheckerMiddleware()
+  @DateCheckerMiddleware()
   async readTasks(): Promise<GetTasksResponse> {
     // Implementation for reading tasks
     let tasks: Task[];
@@ -55,6 +62,8 @@ export class MongoService {
     };
   }
 
+  @DateCheckerMiddleware()
+  @ParameterCheckerMiddleware()
   async updateTask(
     updatedTask: UpdateTaskRequest
   ): Promise<UpdateTaskResponse> {
@@ -77,6 +86,8 @@ export class MongoService {
     };
   }
 
+  @ParameterCheckerMiddleware()
+  @DateCheckerMiddleware()
   async deleteTask(taskId: string): Promise<DeleteTaskResponse> {
     // Implementation for deleting a task
     try {
