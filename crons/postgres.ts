@@ -5,7 +5,7 @@ import pg from "pg";
 import { GetTasksResponse } from "../dtos/task";
 import { Task, TaskModel } from "../db/sequelizeModel";
 
-@GenezioDeploy()
+// @GenezioDeploy()
 export class PostgresCrons {
   private model: ModelStatic<TaskModel>;
 
@@ -41,7 +41,7 @@ export class PostgresCrons {
     );
   }
 
-  @GenezioMethod({ type: "cron", cronString: "* * * * *" })
+  // @GenezioMethod({ type: "cron", cronString: "* * * * *" })
   async readTasks(): Promise<GetTasksResponse> {
     // Implementation for reading tasks
     let tasks: Task[];

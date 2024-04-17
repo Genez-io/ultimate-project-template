@@ -10,7 +10,11 @@ import {
   UpdateTaskRequest,
   UpdateTaskResponse,
 } from "../dtos/task";
+import { RateLimiter } from "../middleware/rateLimiter";
 
+type Context = {
+  isGnzContext: boolean;
+};
 @GenezioDeploy()
 export class MongoService {
   private model: Model<any, any>;
@@ -19,6 +23,8 @@ export class MongoService {
     mongoose.connect(mongoURL);
     this.model = mongoose.connection.model("Task", taskSchema);
   }
+
+  @RateLimiter()
   async createTask(task: CreateTaskRequest): Promise<CreateTaskResponse> {
     // Implementation for creating a task
     task.date = new Date();
@@ -37,8 +43,10 @@ export class MongoService {
     };
   }
 
-  async readTasks(): Promise<GetTasksResponse> {
+  @RateLimiter({ type: "jsonrpc" })
+  async readTasks(context: Context): Promise<GetTasksResponse> {
     // Implementation for reading tasks
+    console.log("context is", JSON.stringify(context));
     let tasks: Task[];
     try {
       tasks = await this.model.find().exec();

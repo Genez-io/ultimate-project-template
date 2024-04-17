@@ -1,5 +1,6 @@
 import {
   GenezioDeploy,
+  GenezioHttpRequest,
   GenezioHttpResponse,
   GenezioMethod,
 } from "@genezio/types";
@@ -17,7 +18,16 @@ export class MongoWebhooks {
   }
 
   @GenezioMethod({ type: "http" })
-  async readTasks(): Promise<GenezioHttpResponse> {
+  async readTasks(req: GenezioHttpRequest): Promise<GenezioHttpResponse> {
+    if (!req) {
+      return {
+        statusCode: "400",
+        body: {
+          success: false,
+          error: "Bad request",
+        },
+      };
+    }
     // Implementation for reading tasks
     let tasks: Task[];
     try {

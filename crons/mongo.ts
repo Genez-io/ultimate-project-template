@@ -4,7 +4,7 @@ import { mongoURL } from "../config/envHandler";
 import { GetTasksResponse } from "../dtos/task";
 import { Task, taskSchema } from "../db/mongooseModel";
 
-@GenezioDeploy()
+// @GenezioDeploy()
 export class MongoCrons {
   private model: Model<any, any>;
 
@@ -13,7 +13,7 @@ export class MongoCrons {
     this.model = mongoose.connection.model("Task", taskSchema);
   }
 
-  @GenezioMethod({ type: "cron", cronString: "* * * * *" })
+  // @GenezioMethod({ type: "cron", cronString: "* * * * *" })
   async readTasks(): Promise<GetTasksResponse> {
     // Implementation for reading tasks
     let tasks: Task[];
