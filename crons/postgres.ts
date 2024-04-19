@@ -2,7 +2,6 @@ import { GenezioDeploy, GenezioMethod } from "@genezio/types";
 import { postgresURL } from "../config/envHandler";
 import { DataTypes, ModelStatic, Sequelize } from "sequelize";
 import pg from "pg";
-import { GetTasksResponse } from "../dtos/task";
 import { Task, TaskModel } from "../db/sequelizeModel";
 
 @GenezioDeploy()
@@ -42,21 +41,14 @@ export class PostgresCrons {
   }
 
   @GenezioMethod({ type: "cron", cronString: "* * * * *" })
-  async readTasks(): Promise<GetTasksResponse> {
+  async logTasks(): Promise<void> {
     // Implementation for reading tasks
     let tasks: Task[];
     try {
       tasks = await this.model.findAll();
+      console.log("Tasks: ", tasks);
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-        tasks: [],
-      };
+      console.log("An error occurred while reading tasks: ", error);
     }
-    return {
-      success: true,
-      tasks: tasks,
-    };
   }
 }
