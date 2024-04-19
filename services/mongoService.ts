@@ -11,6 +11,7 @@ import {
   UpdateTaskResponse,
 } from "../dtos/task";
 import { RateLimiter } from "../middleware/rateLimiter";
+import Redis from "ioredis";
 
 type Context = {
   isGnzContext: boolean;
@@ -44,12 +45,11 @@ export class MongoService {
   }
 
   @RateLimiter({
-    dbUrl:
-      "redis://default:2d8dc331d6d34969b56d35b6ceae5ce1@us1-ample-beetle-42556.upstash.io:42556",
+    dbUrl: process.env.REDIS_URL,
+    limit: 5,
   })
   async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
-    console.log("context is", JSON.stringify(context));
     let tasks: Task[];
     try {
       tasks = await this.model.find().exec();

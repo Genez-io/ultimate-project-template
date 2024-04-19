@@ -1,10 +1,11 @@
-export type RateLimiterOptionsParameters = { dbUrl: string };
+export type RateLimiterOptionsParameters = {
+  dbUrl?: string;
+  limit?: number;
+};
 import Redis from "ioredis";
 
 // Decorator that marks that a method should be deployed using genezio.
-export function RateLimiter(
-  _dict: RateLimiterOptionsParameters = { dbUrl: "" }
-) {
+export function RateLimiter(_dict: RateLimiterOptionsParameters = {}) {
   return function (value: Function, _context: any) {
     return async function (...args: any[]) {
       if (args.length === 0 || !args[0].isGnzContext) {
@@ -13,15 +14,27 @@ export function RateLimiter(
         );
       } else {
         try {
-          const client = new Redis(_dict.dbUrl);
+          const date = new Date();
+          const client = new Redis(_dict.dbUrl ? _dict.dbUrl : "");
           const oldCount = await client.get(
-            args[0].requestContext.http.sourceIp
+            `${args[0].requestContext.http.sourceIp}:${date.getMinutes()}`
           );
-
-          await client.set(
-            args[0].requestContext.http.sourceIp,
-            oldCount ? parseInt(oldCount) + 1 : 1
-          );
+          if (
+            oldCount &&
+            parseInt(oldCount) >= (_dict.limit ? _dict.limit : 20)
+          ) {
+            throw new Error("Rate limit exceeded");
+          }
+          await client
+            .multi()
+            .incr(
+              `${args[0].requestContext.http.sourceIp}:${date.getMinutes()}`
+            )
+            .expire(
+              `${args[0].requestContext.http.sourceIp}:${date.getMinutes()}`,
+              59
+            )
+            .exec();
         } catch (error) {
           console.log(
             "Error when opperating on the redis client. Remember to set the Redis dbUrl parameter in the RateLimiter decorator."
