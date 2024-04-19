@@ -1,5 +1,5 @@
 import { Task, taskSchema } from "../db/mongooseModel";
-import { GenezioDeploy } from "@genezio/types";
+import { GenezioDeploy, GnzContext } from "@genezio/types";
 import mongoose, { Model } from "mongoose";
 import { mongoURL } from "../config/envHandler";
 import {
@@ -43,8 +43,11 @@ export class MongoService {
     };
   }
 
-  @RateLimiter({ type: "jsonrpc" })
-  async readTasks(context: Context): Promise<GetTasksResponse> {
+  @RateLimiter({
+    dbUrl:
+      "redis://default:2d8dc331d6d34969b56d35b6ceae5ce1@us1-ample-beetle-42556.upstash.io:42556",
+  })
+  async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
     console.log("context is", JSON.stringify(context));
     let tasks: Task[];

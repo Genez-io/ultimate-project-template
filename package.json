@@ -9,6 +9,7 @@
   "license": "ISC",
   "dependencies": {
     "@genezio/types": "^1.0.14",
+    "ioredis": "^5.4.1",
     "mongoose": "^8.3.1",
     "node-fetch": "^3.3.2",
     "pg": "^8.11.5",
