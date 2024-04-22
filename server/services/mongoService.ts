@@ -5,7 +5,6 @@ import { mongoURL } from "../config/envHandler";
 import {
   CreateTaskRequest,
   CreateTaskResponse,
-  DeleteTaskResponse,
   GetTasksResponse,
   UpdateTaskRequest,
   UpdateTaskResponse,
@@ -31,13 +30,9 @@ export class MongoService {
     try {
       createdTask = await this.model.create(task);
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
     return {
-      success: true,
       task: createdTask,
     };
   }
@@ -50,14 +45,9 @@ export class MongoService {
     try {
       tasks = await this.model.find().exec();
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-        tasks: [],
-      };
+      throw error;
     }
     return {
-      success: true,
       tasks: tasks,
     };
   }
@@ -75,31 +65,21 @@ export class MongoService {
         .findByIdAndUpdate(updatedTask.id, updatedTask, { new: true })
         .exec();
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
     return {
-      success: true,
       task: updatedTaskResponse,
     };
   }
 
   @ParameterCheckerMiddleware()
   @DateCheckerMiddleware()
-  async deleteTask(taskId: string): Promise<DeleteTaskResponse> {
+  async deleteTask(taskId: string): Promise<void> {
     // Implementation for deleting a task
     try {
       await this.model.findByIdAndDelete(taskId).exec();
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
-    return {
-      success: true,
-    };
   }
 }

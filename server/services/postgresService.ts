@@ -6,9 +6,9 @@ import pg from "pg";
 import {
   CreateTaskRequestPostgres,
   CreateTaskResponse,
-  DeleteTaskResponse,
   GetTasksResponse,
   UpdateTaskRequest,
+  UpdateTaskRequestPostgres,
   UpdateTaskResponsePostgres,
 } from "../dtos/task";
 
@@ -48,22 +48,26 @@ export class PostgresService {
     );
   }
 
+  async #generateUniqueId(): Promise<number> {
+    const maxId: number = await TaskModel.max("taskId");
+    if (maxId == null) {
+      return 0;
+    }
+    return maxId + 1;
+  }
+
   async createTask(
     task: CreateTaskRequestPostgres
   ): Promise<CreateTaskResponse> {
     // Implementation for creating a task
-    task.date = new Date();
+    task.taskId = await this.#generateUniqueId();
     let createdTask: Task;
     try {
       createdTask = await this.model.create(task);
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
     return {
-      success: true,
       task: createdTask,
     };
   }
@@ -74,54 +78,37 @@ export class PostgresService {
     try {
       tasks = await this.model.findAll();
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-        tasks: [],
-      };
+      throw error;
     }
     return {
-      success: true,
       tasks: tasks,
     };
   }
 
   async updateTask(
-    updatedTask: UpdateTaskRequest
+    updatedTask: UpdateTaskRequestPostgres
   ): Promise<UpdateTaskResponsePostgres> {
     // Implementation for updating a task
     updatedTask.date = new Date();
     let updatedTaskResponse;
-    const id = parseInt(updatedTask.id);
     try {
       updatedTaskResponse = await this.model.update(updatedTask, {
-        where: { taskId: id },
+        where: { taskId: updatedTask.id },
       });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
     return {
-      success: true,
       modifiedRows: updatedTaskResponse,
     };
   }
 
-  async deleteTask(taskId: string): Promise<DeleteTaskResponse> {
+  async deleteTask(taskId: number): Promise<void> {
     // Implementation for deleting a task
     try {
-      const id = parseInt(taskId);
-      await this.model.destroy({ where: { taskId: id } });
+      await this.model.destroy({ where: { taskId: taskId } });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
-    return {
-      success: true,
-    };
   }
 }

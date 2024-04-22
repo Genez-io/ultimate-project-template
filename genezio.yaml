@@ -39,9 +39,7 @@ frontend:
     # List of scripts to run when starting the local development server. 
     start:
       - npm install
-      - npm run dev
     # List of scripts to run before deploying the frontend.
     deploy:
       - npm run install-prod-sdk
       - npm install
-
