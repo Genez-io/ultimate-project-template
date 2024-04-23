@@ -1,5 +1,5 @@
 import { Task, taskSchema } from "../db/mongooseModel";
-import { GenezioDeploy } from "@genezio/types";
+import { GenezioAuth, GenezioDeploy, GnzContext } from "@genezio/types";
 import mongoose, { Model } from "mongoose";
 import { mongoURL } from "../config/envHandler";
 import {
@@ -23,9 +23,16 @@ export class MongoService {
 
   @ParameterCheckerMiddleware()
   @DateCheckerMiddleware()
-  async createTask(task: CreateTaskRequest): Promise<CreateTaskResponse> {
+  @GenezioAuth()
+  async createTask(
+    context: GnzContext,
+    task: CreateTaskRequest
+  ): Promise<CreateTaskResponse> {
     // Implementation for creating a task
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
     task.date = new Date();
+    task.ownerId = ownerId;
     let createdTask: Task;
     try {
       createdTask = await this.model.create(task);
@@ -39,11 +46,18 @@ export class MongoService {
 
   @ParameterCheckerMiddleware()
   @DateCheckerMiddleware()
-  async readTasks(): Promise<GetTasksResponse> {
+  @GenezioAuth()
+  async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
     let tasks: Task[];
     try {
-      tasks = await this.model.find().exec();
+      tasks = await this.model
+        .find({
+          ownerId: ownerId,
+        })
+        .exec();
     } catch (error: any) {
       throw error;
     }
@@ -54,11 +68,19 @@ export class MongoService {
 
   @DateCheckerMiddleware()
   @ParameterCheckerMiddleware()
+  @GenezioAuth()
   async updateTask(
+    context: GnzContext,
     updatedTask: UpdateTaskRequest
   ): Promise<UpdateTaskResponse> {
     // Implementation for updating a task
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
+
     updatedTask.date = new Date();
+    const task = await this.model.findById(updatedTask.id).exec();
+    if (task.ownerId !== ownerId)
+      throw new Error("User not authorized to update this task.");
     let updatedTaskResponse: Task;
     try {
       updatedTaskResponse = await this.model
@@ -74,8 +96,14 @@ export class MongoService {
 
   @ParameterCheckerMiddleware()
   @DateCheckerMiddleware()
-  async deleteTask(taskId: string): Promise<void> {
+  @GenezioAuth()
+  async deleteTask(context: GnzContext, taskId: string): Promise<void> {
     // Implementation for deleting a task
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
+    const task = await this.model.findById(taskId).exec();
+    if (task.ownerId !== ownerId)
+      throw new Error("User not authorized to delete this task.");
     try {
       await this.model.findByIdAndDelete(taskId).exec();
     } catch (error: any) {

@@ -3,6 +3,7 @@
 // Create Task Request DTO
 type CreateTaskRequest = {
   title: string;
+  ownerId?: string;
   solved: boolean;
   date?: Date;
 };
@@ -11,6 +12,7 @@ type CreateTaskRequest = {
 type CreateTaskRequestPostgres = {
   taskId?: number;
   title: string;
+  ownerId?: string;
   solved: boolean;
   date: Date;
 };
@@ -37,6 +39,7 @@ type UpdateTaskRequestPostgres = {
 type TaskResponse = {
   taskId?: number;
   _id?: string;
+  ownerId: string;
   title: string;
   solved: boolean;
   date: Date;
