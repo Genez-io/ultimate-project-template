@@ -68,6 +68,11 @@ $ genezio local
 
 - Open your browser and go to `http://localhost:5173` to see the application.
 
+Alternatively, you can test only the backend methods from our test interface.
+By going to `http://localhost:8083/explore` you can test all the methods that are available in the backend from a postman-like interface.
+
+If you want to learn more about our test interface, you can check out the [documentation](https://genezio.com/docs/features/testing/).
+
 > 👉 **Step 8** - Deploy the entire project
 
 - Run the following command in the `root` of the project to deploy the entire project.
