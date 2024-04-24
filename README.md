@@ -8,8 +8,8 @@ We use GenezioAuth to manage authentication and authorization and Genezio to dep
 - ✅ MongoDb and PostgreSQL support
 - ✅ React frontend
 - ✅ Handmade middlewares using Typescript decorators
-- 🔒 Typescript for both backend and frontend
-- 🔒 RPC between frontend and backend ensuing type safety
+- 💡 Typescript for both backend and frontend
+- 💡 RPC between frontend and backend ensuing type safety
 - 🚀 Automatic SDK generation for the frontend
 - 🚀 Out of the box authentication and authorization with GenezioAuth
 - 🚀 Out of the box deployment with Genezio
@@ -17,8 +17,6 @@ We use GenezioAuth to manage authentication and authorization and Genezio to dep
 ## Requirements
 
 - Node.JS >= 18.2
-- MongoDB
-- PostgreSQL
 
 ## How to run the project
 
@@ -140,3 +138,8 @@ The project is divided into two main directories: `client` and `server`.
      |
      |-- ************************************************************************
 ```
+
+## Support
+
+If you have any questions or need help, please open a issue on this repository or contact us on [Discord](https://discord.gg/uc9H5YKjXv) for a more hands on aproach. We are always happy to help you and welcome any kind of constructive feedback. If you want to learn more about Genezio, please visit our [website](https://genezio.com/) or hop on over to our
+[Github](https://github.com/Genez-io/genezio).
