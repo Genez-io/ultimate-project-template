@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - main
-
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 jobs:
   deploy-project:
     runs-on: ubuntu-latest
@@ -15,6 +16,12 @@ jobs:
       - uses: Genez-io/genezio-github-action@main
         with:
           token: ${{ secrets.GENEZIO_TOKEN }}
+      - name: Install Node.js dependencies
+        working-directory: ./server
+        run: npm ci
+      - name: Install Node.js dependencies
+        working-directory: ./client
+        run: npm ci
       - name: deploy
         working-directory: ./
-        run: genezio deploy —stage prod
+        run: genezio deploy --backend --stage prod
