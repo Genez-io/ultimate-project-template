@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: Genez-io/genezio-github-action@main
+      - uses: Genez-io/genezio-github-action@v1
         with:
           token: ${{ secrets.GENEZIO_TOKEN }}
       - name: Install Node.js dependencies
