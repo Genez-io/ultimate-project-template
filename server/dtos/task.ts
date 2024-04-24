@@ -3,14 +3,16 @@
 // Create Task Request DTO
 type CreateTaskRequest = {
   title: string;
+  ownerId?: string;
   solved: boolean;
   date?: Date;
 };
 
 // Create Task Request DTO
 type CreateTaskRequestPostgres = {
-  taskId: string;
+  taskId?: number;
   title: string;
+  ownerId?: string;
   solved: boolean;
   date: Date;
 };
@@ -23,11 +25,21 @@ type UpdateTaskRequest = {
   date?: Date;
 };
 
+// Update Task Request DTO
+type UpdateTaskRequestPostgres = {
+  id: number;
+  title?: string;
+  solved?: boolean;
+  date?: Date;
+};
+
 // Response DTOs
 
 // Task Response DTO
 type TaskResponse = {
+  taskId?: number;
   _id?: string;
+  ownerId: string;
   title: string;
   solved: boolean;
   date: Date;
@@ -35,48 +47,33 @@ type TaskResponse = {
 
 // Get Tasks Response DTO
 type GetTasksResponse = {
-  success: boolean;
   tasks: TaskResponse[];
-  error?: string;
 };
 
 // Get Task Response DTO
 type GetTaskResponse = {
-  success: boolean;
-  task?: TaskResponse;
-  error?: string;
+  task: TaskResponse;
 };
 
 // Create Task Response DTO
 type CreateTaskResponse = {
-  success: boolean;
-  task?: TaskResponse;
-  error?: string;
+  task: TaskResponse;
 };
 
 // Update Task Response DTO
 type UpdateTaskResponse = {
-  success: boolean;
-  task?: TaskResponse;
-  error?: string;
-};
-
-// Delete Task Response DTO
-type DeleteTaskResponse = {
-  success: boolean;
-  error?: string;
+  task: TaskResponse;
 };
 
 type UpdateTaskResponsePostgres = {
-  success: boolean;
   modifiedRows?: [number];
-  error?: string;
 };
 
 // Export the DTOs
 export {
   CreateTaskRequestPostgres,
   UpdateTaskResponsePostgres,
+  UpdateTaskRequestPostgres,
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskResponse,
@@ -84,5 +81,4 @@ export {
   GetTaskResponse,
   CreateTaskResponse,
   UpdateTaskResponse,
-  DeleteTaskResponse,
 };

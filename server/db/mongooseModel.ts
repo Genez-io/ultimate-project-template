@@ -5,6 +5,10 @@ export const taskSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  ownerId: {
+    type: String,
+    required: true,
+  },
   solved: {
     type: Boolean,
     required: true,
@@ -19,6 +23,7 @@ export const taskSchema = new mongoose.Schema({
 
 export type Task = {
   _id?: string;
+  ownerId: string;
   title: string;
   solved: boolean;
   date: Date;

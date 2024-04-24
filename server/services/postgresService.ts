@@ -1,14 +1,13 @@
 import { Task, TaskModel } from "../db/sequelizeModel";
-import { GenezioDeploy } from "@genezio/types";
+import { GenezioAuth, GenezioDeploy, GnzContext } from "@genezio/types";
 import { DataTypes, ModelStatic, Sequelize } from "sequelize";
 import { postgresURL } from "../config/envHandler";
 import pg from "pg";
 import {
   CreateTaskRequestPostgres,
   CreateTaskResponse,
-  DeleteTaskResponse,
   GetTasksResponse,
-  UpdateTaskRequest,
+  UpdateTaskRequestPostgres,
   UpdateTaskResponsePostgres,
 } from "../dtos/task";
 
@@ -48,80 +47,87 @@ export class PostgresService {
     );
   }
 
+  async #generateUniqueId(): Promise<number> {
+    const maxId: number = await TaskModel.max("taskId");
+    if (maxId == null) {
+      return 0;
+    }
+    return maxId + 1;
+  }
+
+  @GenezioAuth()
   async createTask(
+    context: GnzContext,
     task: CreateTaskRequestPostgres
   ): Promise<CreateTaskResponse> {
     // Implementation for creating a task
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
+    task.taskId = await this.#generateUniqueId();
     task.date = new Date();
+    task.ownerId = ownerId;
     let createdTask: Task;
     try {
       createdTask = await this.model.create(task);
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
     return {
-      success: true,
       task: createdTask,
     };
   }
 
-  async readTasks(): Promise<GetTasksResponse> {
+  @GenezioAuth()
+  async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
     let tasks: Task[];
     try {
-      tasks = await this.model.findAll();
+      tasks = await this.model.findAll({
+        where: { ownerId: ownerId },
+      });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-        tasks: [],
-      };
+      throw error;
     }
     return {
-      success: true,
       tasks: tasks,
     };
   }
 
+  @GenezioAuth()
   async updateTask(
-    updatedTask: UpdateTaskRequest
+    context: GnzContext,
+    updatedTask: UpdateTaskRequestPostgres
   ): Promise<UpdateTaskResponsePostgres> {
     // Implementation for updating a task
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
+
     updatedTask.date = new Date();
     let updatedTaskResponse;
-    const id = parseInt(updatedTask.id);
     try {
       updatedTaskResponse = await this.model.update(updatedTask, {
-        where: { taskId: id },
+        where: { taskId: updatedTask.id, ownerId: ownerId },
       });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
     return {
-      success: true,
       modifiedRows: updatedTaskResponse,
     };
   }
 
-  async deleteTask(taskId: string): Promise<DeleteTaskResponse> {
+  @GenezioAuth()
+  async deleteTask(context: GnzContext, taskId: number): Promise<void> {
     // Implementation for deleting a task
+    const ownerId = context.user?.userId;
+    if (!ownerId) throw new Error("User not found in the context.");
+
     try {
-      const id = parseInt(taskId);
-      await this.model.destroy({ where: { taskId: id } });
+      await this.model.destroy({ where: { taskId: taskId, ownerId: ownerId } });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
-    return {
-      success: true,
-    };
   }
 }
