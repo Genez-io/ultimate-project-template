@@ -139,6 +139,14 @@ The project is divided into two main directories: `client` and `server`.
      |-- ************************************************************************
 ```
 
+## Github Actions
+
+This project also has a template on how to structure a Github action to deploy your project automatically each time you push to the main branch. The action is located in the `.github/workflows` directory and is called `deploy-backend.yml`. This action will deploy the backend side of the project to Genezio each time you push to the main branch. To use this action, you need to add the following secrets to your Github repository:
+
+- `GENEZIO_TOKEN` - The token that you create in the [Genezio dashboard](https://app.genez.io/settings/tokens)
+
+To learn more about integrating Github actions with Genezio, please check out this [article](https://genezio.com/blog/integrating-github-actions-with-genezio-for-ci/cd/).
+
 ## Support
 
 If you have any questions or need help, please open a issue on this repository or contact us on [Discord](https://discord.gg/uc9H5YKjXv) for a more hands on aproach. We are always happy to help you and welcome any kind of constructive feedback. If you want to learn more about Genezio, please visit our [website](https://genezio.com/) or hop on over to our
