@@ -1,8 +1,6 @@
 import { Task, TaskModel } from "../db/sequelizeModel";
 import { GenezioAuth, GenezioDeploy, GnzContext } from "@genezio/types";
-import { DataTypes, ModelStatic, Sequelize } from "sequelize";
-import { postgresURL } from "../config/envHandler";
-import pg from "pg";
+import { ModelStatic } from "sequelize";
 import {
   CreateTaskRequestPostgres,
   CreateTaskResponse,
@@ -10,41 +8,15 @@ import {
   UpdateTaskRequestPostgres,
   UpdateTaskResponsePostgres,
 } from "../dtos/task";
+import { connectPostgres } from "../db";
 
 @GenezioDeploy()
 export class PostgresService {
   private model: ModelStatic<TaskModel>;
 
   constructor() {
-    const db = new Sequelize(postgresURL, {
-      dialect: "postgres",
-      dialectModule: pg,
-      define: {
-        timestamps: false,
-      },
-      dialectOptions: {
-        ssl: {
-          require: true,
-        },
-      },
-    });
-    this.model = TaskModel.init(
-      {
-        taskId: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-        },
-        title: DataTypes.STRING(512),
-        ownerId: DataTypes.STRING(512),
-        solved: DataTypes.BOOLEAN,
-        date: DataTypes.DATE,
-      },
-      {
-        sequelize: db,
-        modelName: "TaskModel",
-        tableName: "tasks",
-      }
-    );
+    this.model = connectPostgres();
+    this.model.sync();
   }
 
   async #generateUniqueId(): Promise<number> {

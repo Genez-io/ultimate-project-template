@@ -3,7 +3,7 @@ export const secureMode = process.env.SECURE_MODE || false;
 export const secret =
   process.env.SECRET ||
   "lakikihdgdfdjjjdgd67264664vdjhjdyncmxuei8336%%^#%gdvdhj????jjhdghduue";
-export const mongoURL = process.env.MONGO_URL || "mongodb://127.0.0.1/";
+export const mongoURL = process.env.MONGO_URL || "mongodb://localhost:27017";
 export const noFrontendCaching = process.env.NO_CACHE || "yes";
 export const frontendCacheExpiry = process.env.FRONTEND_CACHE_EXPIRY || "90";
 export const backendCacheExpiry = process.env.BACKEND_CACHE_EXPIRY || "90";

@@ -9,6 +9,7 @@ export class TaskModel extends Model {
 }
 
 export type Task = {
+  taskId?: number;
   title: string;
   ownerId: string;
   solved: boolean;

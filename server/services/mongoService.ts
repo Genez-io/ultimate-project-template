@@ -1,7 +1,6 @@
-import { Task, taskSchema } from "../db/mongooseModel";
+import { Task } from "../db/mongooseModel";
 import { GenezioAuth, GenezioDeploy, GnzContext } from "@genezio/types";
-import mongoose, { Model } from "mongoose";
-import { mongoURL } from "../config/envHandler";
+import { Model } from "mongoose";
 import {
   CreateTaskRequest,
   CreateTaskResponse,
@@ -11,14 +10,14 @@ import {
 } from "../dtos/task";
 import { DateCheckerMiddleware } from "../middleware/dateChecker";
 import { ParameterCheckerMiddleware } from "../middleware/parameterChecker";
+import { connectMongo } from "../db";
 
 @GenezioDeploy()
 export class MongoService {
   private model: Model<any, any>;
 
   constructor() {
-    mongoose.connect(mongoURL);
-    this.model = mongoose.connection.model("Task", taskSchema);
+    this.model = connectMongo();
   }
 
   @ParameterCheckerMiddleware()

@@ -1,52 +1,44 @@
-import { CreateTaskRequest, UpdateTaskRequest } from "../dtos/task";
-
+import { z } from "zod";
 export function ParameterCheckerMiddleware(_dict: any = {}) {
   return function (value: Function, _context: any) {
     return function (...args: any[]) {
+      const GnzContextSchema = z.object({
+        token: z.string(),
+      });
+      const CreateTaskRequestSchema = z.object({
+        title: z.string(),
+        solved: z.boolean(),
+      });
+      const UpdateTaskRequestSchema = z.object({
+        id: z.string(),
+      });
       switch (_context.name) {
         case "createTask":
-          if (
-            args.length !== 2 ||
-            (args.length === 2 &&
-              ((args[1] as CreateTaskRequest).title == undefined ||
-                (args[1] as CreateTaskRequest).solved == undefined))
-          ) {
+          if (args.length !== 2) {
             throw new Error("Invalid parameters");
           }
-          if (args.length === 2 && !args[0].token) {
-            throw new Error("First argument needs to be a GnzContext object");
-          }
+          CreateTaskRequestSchema.parse(args[1]);
+          GnzContextSchema.parse(args[0]);
           break;
         case "readTasks":
           if (args.length !== 1) {
             throw new Error("Invalid parameters");
           }
-          if (args.length === 1 && !args[0].token) {
-            throw new Error("First argument needs to be a GnzContext object");
-          }
+          GnzContextSchema.parse(args[0]);
           break;
         case "updateTask":
-          if (
-            args.length !== 2 ||
-            (args.length === 2 &&
-              (args[1] as UpdateTaskRequest).id == undefined)
-          ) {
+          if (args.length !== 2) {
             throw new Error("Invalid parameters");
           }
-          if (args.length === 2 && !args[0].token) {
-            throw new Error("First argument needs to be a GnzContext object");
-          }
+          GnzContextSchema.parse(args[0]);
+          UpdateTaskRequestSchema.parse(args[1]);
           break;
         case "deleteTask":
-          if (
-            args.length !== 2 ||
-            (args.length === 2 && args[1] == undefined)
-          ) {
+          if (args.length !== 2) {
             throw new Error("Invalid parameters");
           }
-          if (args.length === 2 && !args[0].token) {
-            throw new Error("First argument needs to be a GnzContext object");
-          }
+          GnzContextSchema.parse(args[0]);
+          z.string().parse(args[1]);
           break;
         default:
           break;
