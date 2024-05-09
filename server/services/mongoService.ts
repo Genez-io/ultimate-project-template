@@ -15,6 +15,7 @@ import {
 import { DateCheckerMiddleware } from "../middleware/dateChecker";
 import { ParameterCheckerMiddleware } from "../middleware/parameterChecker";
 import { connectMongo } from "../db/mongoose/connect";
+import { z } from "zod";
 
 @GenezioDeploy()
 export class MongoService {
@@ -22,7 +23,14 @@ export class MongoService {
     connectMongo();
   }
 
-  @ParameterCheckerMiddleware()
+  @ParameterCheckerMiddleware([
+    z.object({
+      title: z.string(),
+      solved: z.boolean(),
+      ownerId: z.string().optional(),
+      date: z.date().optional(),
+    }),
+  ])
   @DateCheckerMiddleware()
   @GenezioAuth()
   async createTask(
@@ -50,7 +58,7 @@ export class MongoService {
   }
 
   @ParameterCheckerMiddleware()
-  // @DateCheckerMiddleware()
+  @DateCheckerMiddleware()
   @GenezioAuth()
   async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
@@ -83,7 +91,14 @@ export class MongoService {
   }
 
   @DateCheckerMiddleware()
-  @ParameterCheckerMiddleware()
+  @ParameterCheckerMiddleware([
+    z.object({
+      id: z.string(),
+      title: z.string().optional(),
+      solved: z.boolean().optional(),
+      date: z.date().optional(),
+    }),
+  ])
   @GenezioAuth()
   async updateTask(
     context: GnzContext,
@@ -123,7 +138,11 @@ export class MongoService {
     };
   }
 
-  @ParameterCheckerMiddleware()
+  @ParameterCheckerMiddleware([
+    z.object({
+      taskId: z.string(),
+    }),
+  ])
   @DateCheckerMiddleware()
   @GenezioAuth()
   async deleteTask(context: GnzContext, taskId: string): Promise<void> {

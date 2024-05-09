@@ -1,49 +1,21 @@
-import { z } from "zod";
-export function ParameterCheckerMiddleware(_dict: any = {}) {
+/* eslint-disable */
+import { ZodObject, z } from "zod";
+export function ParameterCheckerMiddleware(_dict: ZodObject<any>[] = []) {
   return function (value: Function, _context: any) {
     return function (...args: any[]) {
-      const GnzContextSchema = z.object({
-        token: z.string(),
-      });
-      const CreateTaskRequestSchema = z.object({
-        title: z.string(),
-        solved: z.boolean(),
-      });
-      const UpdateTaskRequestSchema = z.object({
-        id: z.string(),
-      });
-      switch (_context.name) {
-        case "createTask":
-          if (args.length !== 2) {
-            throw new Error("Invalid parameters");
-          }
-          CreateTaskRequestSchema.parse(args[1]);
-          GnzContextSchema.parse(args[0]);
+      let zodIndex = 0;
+      for (let i = 0; i < args.length; i++) {
+        if (args[i].isGnzContext) {
+          continue;
+        }
+        if (zodIndex >= _dict.length) {
           break;
-        case "readTasks":
-          if (args.length !== 1) {
-            throw new Error("Invalid parameters");
-          }
-          GnzContextSchema.parse(args[0]);
-          break;
-        case "updateTask":
-          if (args.length !== 2) {
-            throw new Error("Invalid parameters");
-          }
-          GnzContextSchema.parse(args[0]);
-          UpdateTaskRequestSchema.parse(args[1]);
-          break;
-        case "deleteTask":
-          if (args.length !== 2) {
-            throw new Error("Invalid parameters");
-          }
-          GnzContextSchema.parse(args[0]);
-          z.string().parse(args[1]);
-          break;
-        default:
-          break;
+        }
+        _dict[zodIndex].parse(args[i]);
+        zodIndex++;
       }
-      // @ts-expect-error
+
+      // @ts-expect-error this is a valid call
       const func = value.bind(this);
       const result = func(...args);
       return result;
