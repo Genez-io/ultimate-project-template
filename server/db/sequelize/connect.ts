@@ -1,11 +1,9 @@
-import { DataTypes, ModelStatic, Sequelize } from "sequelize";
-import { mongoURL, postgresURL } from "../config/envHandler";
+import { DataTypes, Sequelize } from "sequelize";
+import { TaskModel } from "./task";
+import { postgresURL } from "../../config/envHandler";
 import pg from "pg";
-import { TaskModel } from "./sequelizeModel";
-import mongoose, { Model } from "mongoose";
-import { taskSchema } from "./mongooseModel";
 
-export function connectPostgres(): ModelStatic<TaskModel> {
+export function connectPostgres() {
   const db = new Sequelize(postgresURL, {
     dialect: "postgres",
     dialectModule: pg,
@@ -18,7 +16,7 @@ export function connectPostgres(): ModelStatic<TaskModel> {
       },
     },
   });
-  return TaskModel.init(
+  TaskModel.init(
     {
       taskId: {
         type: DataTypes.INTEGER,
@@ -35,9 +33,5 @@ export function connectPostgres(): ModelStatic<TaskModel> {
       tableName: "tasks",
     }
   );
-}
-
-export function connectMongo(): Model<any, any> {
-  mongoose.connect(mongoURL);
-  return mongoose.connection.model("Task", taskSchema);
+  TaskModel.sync();
 }

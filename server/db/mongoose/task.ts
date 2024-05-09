@@ -22,12 +22,11 @@ export const taskSchema = new mongoose.Schema({
 });
 
 export type Task = {
-  _id?: string;
+  id?: string;
   ownerId: string;
   title: string;
   solved: boolean;
   date: Date;
 };
 
-export const TaskModel =
-  mongoose.models.Task || mongoose.model("Task", taskSchema);
+export const TaskModel = mongoose.model("Task", taskSchema);

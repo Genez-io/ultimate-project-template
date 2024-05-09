@@ -1,6 +1,10 @@
-import { Task, TaskModel } from "../db/sequelizeModel";
-import { GenezioAuth, GenezioDeploy, GnzContext } from "@genezio/types";
-import { ModelStatic } from "sequelize";
+import { TaskModel } from "../db/sequelize/task";
+import {
+  GenezioAuth,
+  GenezioDeploy,
+  GenezioError,
+  GnzContext,
+} from "@genezio/types";
 import {
   CreateTaskRequestPostgres,
   CreateTaskResponse,
@@ -8,15 +12,12 @@ import {
   UpdateTaskRequestPostgres,
   UpdateTaskResponsePostgres,
 } from "../dtos/task";
-import { connectPostgres } from "../db";
+import { connectPostgres } from "../db/sequelize/connect";
 
 @GenezioDeploy()
 export class PostgresService {
-  private model: ModelStatic<TaskModel>;
-
   constructor() {
-    this.model = connectPostgres();
-    this.model.sync();
+    connectPostgres();
   }
 
   async #generateUniqueId(): Promise<number> {
@@ -34,16 +35,19 @@ export class PostgresService {
   ): Promise<CreateTaskResponse> {
     // Implementation for creating a task
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new Error("User not found in the context.");
+    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
     task.taskId = await this.#generateUniqueId();
     task.date = new Date();
     task.ownerId = ownerId;
-    let createdTask: Task;
-    try {
-      createdTask = await this.model.create(task);
-    } catch (error: any) {
-      throw error;
-    }
+    const createdTask = await TaskModel.create(task)
+      .then((task) => {
+        return task.get();
+      })
+      .catch((error) => {
+        console.log("Error creating task in the db", error);
+        throw new GenezioError("Error creating task in the db", 500);
+      });
+
     return {
       task: createdTask,
     };
@@ -53,15 +57,20 @@ export class PostgresService {
   async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new Error("User not found in the context.");
-    let tasks: Task[];
-    try {
-      tasks = await this.model.findAll({
-        where: { ownerId: ownerId },
+    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    const tasks = await TaskModel.findAll({
+      where: { ownerId: ownerId },
+    })
+      .then((tasks) => {
+        return tasks.map((task) => {
+          return task.get();
+        });
+      })
+      .catch((error) => {
+        console.log("Error reading tasks from the db", error);
+        throw new GenezioError("Error reading tasks from the db", 500);
       });
-    } catch (error: any) {
-      throw error;
-    }
+
     return {
       tasks: tasks,
     };
@@ -74,17 +83,16 @@ export class PostgresService {
   ): Promise<UpdateTaskResponsePostgres> {
     // Implementation for updating a task
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new Error("User not found in the context.");
+    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
 
     updatedTask.date = new Date();
-    let updatedTaskResponse;
-    try {
-      updatedTaskResponse = await this.model.update(updatedTask, {
-        where: { taskId: updatedTask.id, ownerId: ownerId },
-      });
-    } catch (error: any) {
-      throw error;
-    }
+
+    const updatedTaskResponse = await TaskModel.update(updatedTask, {
+      where: { taskId: updatedTask.id, ownerId: ownerId },
+    }).catch((error) => {
+      console.log("Error updating task in the db", error);
+      throw new GenezioError("Error updating task in the db", 500);
+    });
     return {
       modifiedRows: updatedTaskResponse,
     };
@@ -94,12 +102,13 @@ export class PostgresService {
   async deleteTask(context: GnzContext, taskId: number): Promise<void> {
     // Implementation for deleting a task
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new Error("User not found in the context.");
+    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
 
-    try {
-      await this.model.destroy({ where: { taskId: taskId, ownerId: ownerId } });
-    } catch (error: any) {
-      throw error;
-    }
+    await TaskModel.destroy({
+      where: { taskId: taskId, ownerId: ownerId },
+    }).catch((error) => {
+      console.log("Error deleting task in the db", error);
+      throw new GenezioError("Error deleting task in the db", 500);
+    });
   }
 }

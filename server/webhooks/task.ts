@@ -3,39 +3,35 @@ import {
   GenezioHttpResponse,
   GenezioMethod,
 } from "@genezio/types";
-import { Model } from "mongoose";
-import { Task as TaskMongo } from "../db/mongooseModel";
-import { connectMongo, connectPostgres } from "../db";
-import { ModelStatic } from "sequelize";
-import { TaskModel, Task as TaskPostgres } from "../db/sequelizeModel";
+import { TaskModel as TaskMongo } from "../db/mongoose/task";
+import { TaskModel as TaskPostgres } from "../db/sequelize/task";
+import { connectMongo } from "../db/mongoose/connect";
+import { connectPostgres } from "../db/sequelize/connect";
 
 @GenezioDeploy()
 export class TaskWebhooks {
-  private modelMongo: Model<any, any>;
-  private modelPostgres: ModelStatic<TaskModel>;
-
   constructor() {
-    this.modelMongo = connectMongo();
-    this.modelPostgres = connectPostgres();
-    this.modelPostgres.sync();
+    connectMongo();
+    connectPostgres();
   }
 
   @GenezioMethod({ type: "http" })
   async readTasksMongo(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
-    let tasks: TaskMongo[];
-    try {
-      tasks = await this.modelMongo.find().exec();
-    } catch (error: any) {
-      return {
-        statusCode: "500",
-        body: {
-          success: false,
-          error: error.message,
-          tasks: [],
-        },
-      };
-    }
+
+    const tasks = await TaskMongo.find()
+      .exec()
+      .catch((error) => {
+        return {
+          statusCode: "500",
+          body: {
+            success: false,
+            error: error.message,
+            tasks: [],
+          },
+        };
+      });
+
     return {
       statusCode: "200",
       body: {
@@ -48,10 +44,7 @@ export class TaskWebhooks {
   @GenezioMethod({ type: "http" })
   async readTasksPostgres(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
-    let tasks: TaskPostgres[];
-    try {
-      tasks = await this.modelPostgres.findAll();
-    } catch (error: any) {
+    const tasks = await TaskPostgres.findAll().catch((error) => {
       return {
         statusCode: "500",
         body: {
@@ -60,7 +53,7 @@ export class TaskWebhooks {
           tasks: [],
         },
       };
-    }
+    });
     return {
       statusCode: "200",
       body: {

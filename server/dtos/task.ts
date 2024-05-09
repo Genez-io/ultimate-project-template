@@ -37,8 +37,7 @@ type UpdateTaskRequestPostgres = {
 
 // Task Response DTO
 type TaskResponse = {
-  taskId?: number;
-  _id?: string;
+  id: string;
   ownerId: string;
   title: string;
   solved: boolean;
