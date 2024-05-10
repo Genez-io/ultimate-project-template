@@ -7,30 +7,35 @@ import { TaskModel as TaskMongo } from "../db/mongoose/task";
 import { TaskModel as TaskPostgres } from "../db/sequelize/task";
 import { connectMongo } from "../db/mongoose/connect";
 import { connectPostgres } from "../db/sequelize/connect";
+import { initTables } from "../db/sequelize/migration";
 
 @GenezioDeploy()
 export class TaskWebhooks {
   constructor() {
     connectMongo();
     connectPostgres();
+
+    // This function should not be used in production
+    initTables();
   }
 
   @GenezioMethod({ type: "http" })
   async readTasksMongo(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
 
-    const tasks = await TaskMongo.find()
-      .exec()
-      .catch((error) => {
-        return {
-          statusCode: "500",
-          body: {
-            success: false,
-            error: error.message,
-            tasks: [],
-          },
-        };
-      });
+    const tasks = await TaskMongo.find().catch(() => {
+      return null;
+    });
+
+    if (!tasks)
+      return {
+        statusCode: "500",
+        body: {
+          success: false,
+          error: "Error reading tasks",
+          tasks: [],
+        },
+      };
 
     return {
       statusCode: "200",
@@ -44,16 +49,19 @@ export class TaskWebhooks {
   @GenezioMethod({ type: "http" })
   async readTasksPostgres(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
-    const tasks = await TaskPostgres.findAll().catch((error) => {
+
+    const tasks = await TaskPostgres.findAll().catch(() => {
+      return null;
+    });
+    if (!tasks)
       return {
         statusCode: "500",
         body: {
           success: false,
-          error: error.message,
+          error: "Error reading tasks",
           tasks: [],
         },
       };
-    });
     return {
       statusCode: "200",
       body: {

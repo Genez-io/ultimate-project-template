@@ -6,86 +6,90 @@ import {
   GnzContext,
 } from "@genezio/types";
 import {
-  CreateTaskRequestPostgres,
+  CreateTaskRequest,
   CreateTaskResponse,
   GetTasksResponse,
-  UpdateTaskRequestPostgres,
+  UpdateTaskRequest,
   UpdateTaskResponsePostgres,
 } from "../dtos/task";
 import { connectPostgres } from "../db/sequelize/connect";
+import { initTables } from "../db/sequelize/migration";
 
 @GenezioDeploy()
 export class PostgresService {
   constructor() {
+    // This function is the way to connect to the database in production
     connectPostgres();
-  }
 
-  async #generateUniqueId(): Promise<number> {
-    const maxId: number = await TaskModel.max("taskId");
-    if (maxId == null) {
-      return 0;
-    }
-    return maxId + 1;
+    // This function should not be used in production
+    initTables();
   }
 
   @GenezioAuth()
   async createTask(
     context: GnzContext,
-    task: CreateTaskRequestPostgres
+    task: CreateTaskRequest
   ): Promise<CreateTaskResponse> {
     // Implementation for creating a task
+
     const ownerId = context.user?.userId;
     if (!ownerId) throw new GenezioError("User not found in the context.", 401);
-    task.taskId = await this.#generateUniqueId();
-    task.date = new Date();
+
     task.ownerId = ownerId;
-    const createdTask = await TaskModel.create(task)
-      .then((task) => {
-        return task.get();
-      })
-      .catch((error) => {
-        console.log("Error creating task in the db", error);
-        throw new GenezioError("Error creating task in the db", 500);
-      });
+    const createdTask = await TaskModel.create(task).catch((error) => {
+      console.log("Error creating task in the db", error);
+      throw new GenezioError("Error creating task in the db", 500);
+    });
+
+    const taskResponse = {
+      id: createdTask.taskId,
+      ownerId: createdTask.ownerId,
+      title: createdTask.title,
+      solved: createdTask.solved,
+    };
 
     return {
-      task: createdTask,
+      task: taskResponse,
     };
   }
 
   @GenezioAuth()
   async readTasks(context: GnzContext): Promise<GetTasksResponse> {
     // Implementation for reading tasks
+
     const ownerId = context.user?.userId;
     if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+
     const tasks = await TaskModel.findAll({
       where: { ownerId: ownerId },
-    })
-      .then((tasks) => {
-        return tasks.map((task) => {
-          return task.get();
-        });
-      })
-      .catch((error) => {
-        console.log("Error reading tasks from the db", error);
-        throw new GenezioError("Error reading tasks from the db", 500);
-      });
+    }).catch((error) => {
+      console.log("Error reading tasks from the db", error);
+      throw new GenezioError("Error reading tasks from the db", 500);
+    });
+
+    const responseTasks = tasks.map((task) => {
+      return {
+        id: task.taskId,
+        ownerId: task.ownerId,
+        title: task.title,
+        solved: task.solved,
+      };
+    });
 
     return {
-      tasks: tasks,
+      tasks: responseTasks,
     };
   }
 
   @GenezioAuth()
   async updateTask(
     context: GnzContext,
-    updatedTask: UpdateTaskRequestPostgres
+    updatedTask: UpdateTaskRequest
   ): Promise<UpdateTaskResponsePostgres> {
     // Implementation for updating a task
+
     const ownerId = context.user?.userId;
     if (!ownerId) throw new GenezioError("User not found in the context.", 401);
-
-    updatedTask.date = new Date();
 
     const updatedTaskResponse = await TaskModel.update(updatedTask, {
       where: { taskId: updatedTask.id, ownerId: ownerId },
@@ -93,14 +97,16 @@ export class PostgresService {
       console.log("Error updating task in the db", error);
       throw new GenezioError("Error updating task in the db", 500);
     });
+
     return {
       modifiedRows: updatedTaskResponse,
     };
   }
 
   @GenezioAuth()
-  async deleteTask(context: GnzContext, taskId: number): Promise<void> {
+  async deleteTask(context: GnzContext, taskId: string): Promise<void> {
     // Implementation for deleting a task
+
     const ownerId = context.user?.userId;
     if (!ownerId) throw new GenezioError("User not found in the context.", 401);
 

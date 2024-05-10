@@ -1,5 +1,4 @@
-import { DataTypes, Sequelize } from "sequelize";
-import { TaskModel } from "./task";
+import { Sequelize } from "sequelize";
 import { postgresURL } from "../../config/envHandler";
 import pg from "pg";
 
@@ -16,22 +15,6 @@ export function connectPostgres() {
       },
     },
   });
-  TaskModel.init(
-    {
-      taskId: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-      },
-      title: DataTypes.STRING(512),
-      ownerId: DataTypes.STRING(512),
-      solved: DataTypes.BOOLEAN,
-      date: DataTypes.DATE,
-    },
-    {
-      sequelize: db,
-      modelName: "TaskModel",
-      tableName: "tasks",
-    }
-  );
-  TaskModel.sync();
+
+  return db;
 }

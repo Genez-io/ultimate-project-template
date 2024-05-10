@@ -3,18 +3,8 @@
 // Create Task Request DTO
 type CreateTaskRequest = {
   title: string;
-  ownerId?: string;
+  ownerId: string;
   solved: boolean;
-  date?: Date;
-};
-
-// Create Task Request DTO
-type CreateTaskRequestPostgres = {
-  taskId?: number;
-  title: string;
-  ownerId?: string;
-  solved: boolean;
-  date: Date;
 };
 
 // Update Task Request DTO
@@ -22,15 +12,6 @@ type UpdateTaskRequest = {
   id: string;
   title?: string;
   solved?: boolean;
-  date?: Date;
-};
-
-// Update Task Request DTO
-type UpdateTaskRequestPostgres = {
-  id: number;
-  title?: string;
-  solved?: boolean;
-  date?: Date;
 };
 
 // Response DTOs
@@ -41,7 +22,6 @@ type TaskResponse = {
   ownerId: string;
   title: string;
   solved: boolean;
-  date: Date;
 };
 
 // Get Tasks Response DTO
@@ -70,9 +50,7 @@ type UpdateTaskResponsePostgres = {
 
 // Export the DTOs
 export {
-  CreateTaskRequestPostgres,
   UpdateTaskResponsePostgres,
-  UpdateTaskRequestPostgres,
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskResponse,

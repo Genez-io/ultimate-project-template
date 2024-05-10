@@ -1,17 +1,15 @@
 import { Model } from "sequelize";
 
 export class TaskModel extends Model {
-  taskId!: number;
+  taskId!: string;
   title!: string;
   ownerId!: string;
   solved!: boolean;
-  date!: Date;
 }
 
 export type Task = {
-  taskId?: number;
+  id?: string;
   title: string;
   ownerId: string;
   solved: boolean;
-  date: Date;
 };
