@@ -1,6 +1,8 @@
 /* eslint-disable */
-import { ZodObject } from "zod";
-export function ParameterCheckerMiddleware(_dict: ZodObject<any>[] = []) {
+import { ZodObject, ZodString } from "zod";
+export function ParameterCheckerMiddleware(
+  _dict: ZodObject<any>[] | ZodString[] = []
+) {
   return function (value: Function, _context: any) {
     return function (...args: any[]) {
       let zodIndex = 0;

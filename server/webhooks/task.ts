@@ -7,23 +7,20 @@ import { TaskModel as TaskMongo } from "../db/mongoose/task";
 import { TaskModel as TaskPostgres } from "../db/sequelize/task";
 import { connectMongo } from "../db/mongoose/connect";
 import { connectPostgres } from "../db/sequelize/connect";
-import { initTables } from "../db/sequelize/migration";
 
 @GenezioDeploy()
 export class TaskWebhooks {
   constructor() {
     connectMongo();
     connectPostgres();
-
-    // This function should not be used in production
-    initTables();
   }
 
   @GenezioMethod({ type: "http" })
   async readTasksMongo(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
 
-    const tasks = await TaskMongo.find().catch(() => {
+    const tasks = await TaskMongo.find().catch((error) => {
+      console.log("Error reading tasks", error);
       return null;
     });
 
@@ -50,7 +47,8 @@ export class TaskWebhooks {
   async readTasksPostgres(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
 
-    const tasks = await TaskPostgres.findAll().catch(() => {
+    const tasks = await TaskPostgres.findAll().catch((error) => {
+      console.log("Error reading tasks", error);
       return null;
     });
     if (!tasks)

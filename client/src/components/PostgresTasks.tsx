@@ -14,12 +14,10 @@ import {
 } from "reactstrap";
 import { useState, useEffect } from "react";
 import {
+  CreateTaskRequest,
   PostgresService,
   TaskResponse as Task,
-  GetTasksResponse,
-  CreateTaskRequestPostgres,
-  CreateTaskResponse,
-  UpdateTaskRequestPostgres,
+  UpdateTaskRequest,
 } from "@genezio-sdk/ultimate-project-template";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "@genezio/auth";
@@ -41,10 +39,10 @@ export default function PostgresTasks() {
 
   useEffect(() => {
     PostgresService.readTasks()
-      .then((result: GetTasksResponse) => {
-        setTasks(result.tasks);
+      .then((result: Task[]) => {
+        setTasks(result);
       })
-      .catch((error: any) => {
+      .catch((error) => {
         setAlertErrorMessage(
           `Unexpected error: ${
             error
@@ -55,45 +53,39 @@ export default function PostgresTasks() {
       });
   }, []);
 
-  async function handleDelete(id: number) {
-    await PostgresService.deleteTask(id)
-      .then(() => {
-        const newTasks = tasks.filter((task) => task.taskId !== id);
-        setTasks(newTasks);
-      })
-      .catch((error: any) => {
-        setAlertErrorMessage(
-          `Unexpected error: ${
-            error
-              ? error
-              : "Please check the backend logs in the project dashboard - https://app.genez.io."
-          }`
-        );
-      });
+  async function handleDelete(id: string) {
+    await PostgresService.deleteTask(id).catch((error) => {
+      setAlertErrorMessage(
+        `Unexpected error: ${
+          error
+            ? error
+            : "Please check the backend logs in the project dashboard - https://app.genez.io."
+        }`
+      );
+    });
+    const newTasks = tasks.filter((task) => task.id !== id);
+    setTasks(newTasks);
   }
 
-  async function handleEdit(id: number, title: string, solved: boolean) {
-    const updatedTask: UpdateTaskRequestPostgres = { id, title, solved };
-    await PostgresService.updateTask(updatedTask)
-      .then(() => {
-        const newTasks = tasks.map((task) => {
-          if (task.taskId === id) {
-            task.title = title;
-            task.solved = solved;
-          }
-          return task;
-        });
-        setTasks(newTasks);
-      })
-      .catch((error: any) => {
-        setAlertErrorMessage(
-          `Unexpected error: ${
-            error
-              ? error
-              : "Please check the backend logs in the project dashboard - https://app.genez.io."
-          }`
-        );
-      });
+  async function handleEdit(id: string, title: string, solved: boolean) {
+    const updatedTask: UpdateTaskRequest = { id, title, solved };
+    await PostgresService.updateTask(updatedTask).catch((error) => {
+      setAlertErrorMessage(
+        `Unexpected error: ${
+          error
+            ? error
+            : "Please check the backend logs in the project dashboard - https://app.genez.io."
+        }`
+      );
+    });
+    const newTasks = tasks.map((task) => {
+      if (task.id === id) {
+        task.title = title;
+        task.solved = solved;
+      }
+      return task;
+    });
+    setTasks(newTasks);
   }
 
   async function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
@@ -102,26 +94,23 @@ export default function PostgresTasks() {
       setError("Title is mandatory");
       return;
     }
-    const newTask: CreateTaskRequestPostgres = {
+    const newTask: CreateTaskRequest = {
       title: taskTitle,
       solved: false,
-      date: new Date(),
     };
-    await PostgresService.createTask(newTask)
-      .then((result: CreateTaskResponse) => {
-        setTasks([...tasks, result.task]);
-        setTaskTitle("");
-        toggleModalAddTask();
-      })
-      .catch((error: any) => {
-        setAlertErrorMessage(
-          `Unexpected error: ${
-            error
-              ? error
-              : "Please check the backend logs in the project dashboard - https://app.genez.io."
-          }`
-        );
-      });
+    const result = await PostgresService.createTask(newTask).catch((error) => {
+      setAlertErrorMessage(
+        `Unexpected error: ${
+          error
+            ? error
+            : "Please check the backend logs in the project dashboard - https://app.genez.io."
+        }`
+      );
+    });
+    if (result) {
+      setTasks([...tasks, result]);
+      toggleModalAddTask();
+    }
   }
 
   return alertErrorMessage != "" ? (
@@ -165,7 +154,7 @@ export default function PostgresTasks() {
               <Row>
                 <Col sm="12">
                   {tasks.map((task) => (
-                    <div key={task.taskId} className="mb-3">
+                    <div key={task.id} className="mb-3">
                       <p className="mb-0">
                         <span className="h4">{task.title}</span> -{" "}
                         {task.solved ? "Solved" : "Not Solved"}
@@ -173,9 +162,7 @@ export default function PostgresTasks() {
                       <ButtonGroup aria-label="Basic example">
                         <Button
                           color="danger"
-                          onClick={() =>
-                            handleDelete(task.taskId ? task.taskId : 0)
-                          }
+                          onClick={() => handleDelete(task.id ? task.id : "")}
                         >
                           Delete Task
                         </Button>
@@ -183,7 +170,7 @@ export default function PostgresTasks() {
                           color="primary"
                           onClick={() =>
                             handleEdit(
-                              task.taskId ? task.taskId : 0,
+                              task.id ? task.id : "",
                               task.title,
                               !task.solved
                             )

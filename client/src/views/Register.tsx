@@ -28,7 +28,7 @@ export default function Register() {
     setError("");
     try {
       await AuthService.getInstance().register(email, password, name);
-    } catch (err: any) {
+    } catch (err) {
       setError(
         "Error code: " +
           (err as GenezioError).code +
@@ -103,7 +103,7 @@ export default function Register() {
                   </div>
                   <div className="mt-2">
                     <span>
-                      Already have an account? <a href="/login">Login</a>
+                      Already have an account? <a href="/auth/login">Login</a>
                     </span>
                   </div>
                 </form>

@@ -16,9 +16,6 @@ import { useState, useEffect } from "react";
 import {
   MongoService,
   TaskResponse as Task,
-  GetTasksResponse,
-  UpdateTaskResponse,
-  CreateTaskResponse,
   CreateTaskRequest,
   UpdateTaskRequest,
 } from "@genezio-sdk/ultimate-project-template";
@@ -42,10 +39,10 @@ export default function MongoTasks() {
 
   useEffect(() => {
     MongoService.readTasks()
-      .then((result: GetTasksResponse) => {
-        setTasks(result.tasks);
+      .then((result: Task[]) => {
+        setTasks(result);
       })
-      .catch((err: any) => {
+      .catch((err) => {
         setAlertErrorMessage(
           `Unexpected error: ${
             err
@@ -57,45 +54,40 @@ export default function MongoTasks() {
   }, []);
 
   async function handleDelete(id: string) {
-    await MongoService.deleteTask(id)
-      .then(() => {
-        const newTasks = tasks.filter((task) => task._id !== id);
-        setTasks(newTasks);
-      })
-      .catch((err: any) => {
-        setAlertErrorMessage(
-          `Unexpected error: ${
-            err
-              ? err
-              : "Please check the backend logs in the project dashboard - https://app.genez.io."
-          }`
-        );
-      });
+    await MongoService.deleteTask(id).catch((err) => {
+      setAlertErrorMessage(
+        `Unexpected error: ${
+          err
+            ? err
+            : "Please check the backend logs in the project dashboard - https://app.genez.io."
+        }`
+      );
+    });
+    const newTasks = tasks.filter((task) => task.id !== id);
+    setTasks(newTasks);
   }
 
   async function handleEdit(id: string, title: string, solved: boolean) {
     const updatedTask: UpdateTaskRequest = { id, title, solved };
-    await MongoService.updateTask(updatedTask)
-      .then((result: UpdateTaskResponse) => {
-        const resultTask = result.task;
-        const newTasks = tasks.map((task) => {
-          if (task._id === id) {
-            task.title = resultTask.title;
-            task.solved = resultTask.solved;
-          }
-          return task;
-        });
-        setTasks(newTasks);
-      })
-      .catch((err: any) => {
-        setAlertErrorMessage(
-          `Unexpected error: ${
-            err
-              ? err
-              : "Please check the backend logs in the project dashboard - https://app.genez.io."
-          }`
-        );
+    const result = await MongoService.updateTask(updatedTask).catch((err) => {
+      setAlertErrorMessage(
+        `Unexpected error: ${
+          err
+            ? err
+            : "Please check the backend logs in the project dashboard - https://app.genez.io."
+        }`
+      );
+    });
+    if (result) {
+      const newTasks = tasks.map((task) => {
+        if (task.id === id) {
+          task.title = result.title;
+          task.solved = result.solved;
+        }
+        return task;
       });
+      setTasks(newTasks);
+    }
   }
 
   async function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
@@ -108,21 +100,20 @@ export default function MongoTasks() {
       title: taskTitle,
       solved: false,
     };
-    await MongoService.createTask(newTask)
-      .then((result: CreateTaskResponse) => {
-        setTasks([...tasks, result.task]);
-        setTaskTitle("");
-        toggleModalAddTask();
-      })
-      .catch((err: any) => {
-        setAlertErrorMessage(
-          `Unexpected error: ${
-            err
-              ? err
-              : "Please check the backend logs in the project dashboard - https://app.genez.io."
-          }`
-        );
-      });
+    const result = await MongoService.createTask(newTask).catch((err) => {
+      setAlertErrorMessage(
+        `Unexpected error: ${
+          err
+            ? err
+            : "Please check the backend logs in the project dashboard - https://app.genez.io."
+        }`
+      );
+    });
+    if (result) {
+      setTasks([...tasks, result]);
+      setTaskTitle("");
+      toggleModalAddTask();
+    }
   }
 
   return alertErrorMessage != "" ? (
@@ -166,7 +157,7 @@ export default function MongoTasks() {
               <Row>
                 <Col sm="12">
                   {tasks.map((task) => (
-                    <div key={task._id} className="mb-3">
+                    <div key={task.id} className="mb-3">
                       <p className="mb-0">
                         <span className="h4">{task.title}</span> -{" "}
                         {task.solved ? "Solved" : "Not Solved"}
@@ -174,7 +165,7 @@ export default function MongoTasks() {
                       <ButtonGroup aria-label="Basic example">
                         <Button
                           color="danger"
-                          onClick={() => handleDelete(task._id ? task._id : "")}
+                          onClick={() => handleDelete(task.id ? task.id : "")}
                         >
                           Delete Task
                         </Button>
@@ -182,7 +173,7 @@ export default function MongoTasks() {
                           color="primary"
                           onClick={() =>
                             handleEdit(
-                              task._id ? task._id : "",
+                              task.id ? task.id : "",
                               task.title,
                               !task.solved
                             )

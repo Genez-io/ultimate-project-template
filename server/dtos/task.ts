@@ -3,7 +3,7 @@
 // Create Task Request DTO
 type CreateTaskRequest = {
   title: string;
-  ownerId: string;
+  ownerId?: string;
   solved: boolean;
 };
 
@@ -24,26 +24,6 @@ type TaskResponse = {
   solved: boolean;
 };
 
-// Get Tasks Response DTO
-type GetTasksResponse = {
-  tasks: TaskResponse[];
-};
-
-// Get Task Response DTO
-type GetTaskResponse = {
-  task: TaskResponse;
-};
-
-// Create Task Response DTO
-type CreateTaskResponse = {
-  task: TaskResponse;
-};
-
-// Update Task Response DTO
-type UpdateTaskResponse = {
-  task: TaskResponse;
-};
-
 type UpdateTaskResponsePostgres = {
   modifiedRows?: [number];
 };
@@ -54,8 +34,4 @@ export {
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskResponse,
-  GetTasksResponse,
-  GetTaskResponse,
-  CreateTaskResponse,
-  UpdateTaskResponse,
 };

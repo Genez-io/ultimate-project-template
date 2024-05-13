@@ -7,8 +7,7 @@ import {
 } from "@genezio/types";
 import {
   CreateTaskRequest,
-  CreateTaskResponse,
-  GetTasksResponse,
+  TaskResponse,
   UpdateTaskRequest,
   UpdateTaskResponsePostgres,
 } from "../dtos/task";
@@ -29,16 +28,17 @@ export class PostgresService {
   async createTask(
     context: GnzContext,
     task: CreateTaskRequest
-  ): Promise<CreateTaskResponse> {
+  ): Promise<TaskResponse> {
     // Implementation for creating a task
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     task.ownerId = ownerId;
     const createdTask = await TaskModel.create(task).catch((error) => {
       console.log("Error creating task in the db", error);
-      throw new GenezioError("Error creating task in the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
 
     const taskResponse = {
@@ -48,23 +48,22 @@ export class PostgresService {
       solved: createdTask.solved,
     };
 
-    return {
-      task: taskResponse,
-    };
+    return taskResponse;
   }
 
   @GenezioAuth()
-  async readTasks(context: GnzContext): Promise<GetTasksResponse> {
+  async readTasks(context: GnzContext): Promise<TaskResponse[]> {
     // Implementation for reading tasks
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     const tasks = await TaskModel.findAll({
       where: { ownerId: ownerId },
     }).catch((error) => {
       console.log("Error reading tasks from the db", error);
-      throw new GenezioError("Error reading tasks from the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
 
     const responseTasks = tasks.map((task) => {
@@ -76,9 +75,7 @@ export class PostgresService {
       };
     });
 
-    return {
-      tasks: responseTasks,
-    };
+    return responseTasks;
   }
 
   @GenezioAuth()
@@ -89,13 +86,14 @@ export class PostgresService {
     // Implementation for updating a task
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     const updatedTaskResponse = await TaskModel.update(updatedTask, {
       where: { taskId: updatedTask.id, ownerId: ownerId },
     }).catch((error) => {
       console.log("Error updating task in the db", error);
-      throw new GenezioError("Error updating task in the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
 
     return {
@@ -108,13 +106,14 @@ export class PostgresService {
     // Implementation for deleting a task
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     await TaskModel.destroy({
       where: { taskId: taskId, ownerId: ownerId },
     }).catch((error) => {
       console.log("Error deleting task in the db", error);
-      throw new GenezioError("Error deleting task in the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
   }
 }

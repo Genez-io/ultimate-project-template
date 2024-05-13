@@ -7,10 +7,8 @@ import {
 } from "@genezio/types";
 import {
   CreateTaskRequest,
-  CreateTaskResponse,
-  GetTasksResponse,
+  TaskResponse,
   UpdateTaskRequest,
-  UpdateTaskResponse,
 } from "../dtos/task";
 import { DateCheckerMiddleware } from "../middleware/dateChecker";
 import { ParameterCheckerMiddleware } from "../middleware/parameterChecker";
@@ -35,41 +33,41 @@ export class MongoService {
   async createTask(
     context: GnzContext,
     task: CreateTaskRequest
-  ): Promise<CreateTaskResponse> {
+  ): Promise<TaskResponse> {
     // Implementation for creating a task
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     task.ownerId = ownerId;
     const createdTask = await TaskModel.create(task).catch((error) => {
       console.log("Error creating task in the db", error);
-      throw new GenezioError("Error creating task in the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
 
     return {
-      task: {
-        id: createdTask._id.toString(),
-        ownerId: createdTask.ownerId,
-        title: createdTask.title,
-        solved: createdTask.solved,
-      },
+      id: createdTask._id.toString(),
+      ownerId: createdTask.ownerId,
+      title: createdTask.title,
+      solved: createdTask.solved,
     };
   }
 
   @DateCheckerMiddleware(new Date(2021, 1, 1), new Date(2024, 12, 31))
   @GenezioAuth()
-  async readTasks(context: GnzContext): Promise<GetTasksResponse> {
+  async readTasks(context: GnzContext): Promise<TaskResponse[]> {
     // Implementation for reading tasks
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     const tasks = await TaskModel.find({
       ownerId: ownerId,
     }).catch((error) => {
       console.log("Error reading tasks from the db", error);
-      throw new GenezioError("Error reading tasks from the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
 
     const responseTasks = tasks.map((task) => {
@@ -81,9 +79,7 @@ export class MongoService {
       };
     });
 
-    return {
-      tasks: responseTasks,
-    };
+    return responseTasks;
   }
 
   @DateCheckerMiddleware(new Date(2021, 1, 1), new Date(2024, 12, 31))
@@ -98,11 +94,12 @@ export class MongoService {
   async updateTask(
     context: GnzContext,
     updatedTask: UpdateTaskRequest
-  ): Promise<UpdateTaskResponse> {
+  ): Promise<TaskResponse> {
     // Implementation for updating a task
 
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.", 401);
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     const task = await TaskModel.findById(updatedTask.id);
     if (!task || task.ownerId !== ownerId)
@@ -114,7 +111,7 @@ export class MongoService {
       { new: true }
     ).catch((error) => {
       console.log("Error updating task in the db", error);
-      throw new GenezioError("Error updating task in the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
 
     if (!updatedTaskResponse) {
@@ -127,23 +124,17 @@ export class MongoService {
       title: updatedTaskResponse.title,
       solved: updatedTaskResponse.solved,
     };
-    return {
-      task: responseTask,
-    };
+    return responseTask;
   }
 
-  @ParameterCheckerMiddleware([
-    z.object({
-      taskId: z.string(),
-    }),
-  ])
+  @ParameterCheckerMiddleware([z.string()])
   @DateCheckerMiddleware(new Date(2021, 1, 1), new Date(2024, 12, 31))
   @GenezioAuth()
   async deleteTask(context: GnzContext, taskId: string): Promise<void> {
     // Implementation for deleting a task
-
     const ownerId = context.user?.userId;
-    if (!ownerId) throw new GenezioError("User not found in the context.");
+    if (!ownerId)
+      throw new GenezioError("User not logged in or session expired.", 401);
 
     const task = await TaskModel.findById(taskId);
     if (!task || task.ownerId !== ownerId)
@@ -151,7 +142,7 @@ export class MongoService {
 
     await TaskModel.findByIdAndDelete(taskId).catch((error) => {
       console.log("Error deleting task from the db", error);
-      throw new GenezioError("Error deleting task from the db", 500);
+      throw new GenezioError("An unknown error has occured", 500);
     });
   }
 }

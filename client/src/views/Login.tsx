@@ -20,7 +20,7 @@ export default function Login() {
     setError("");
     try {
       await AuthService.getInstance().login(email, password);
-    } catch (err: any) {
+    } catch (err) {
       setError(
         "Error code: " +
           (err as GenezioError).code +
@@ -75,7 +75,8 @@ export default function Login() {
                   </div>
                   <div className="mt-2">
                     <span>
-                      Don't have an account? <a href="/register">Register</a>
+                      Don't have an account?{" "}
+                      <a href="/auth/register">Register</a>
                     </span>
                   </div>
                 </form>
