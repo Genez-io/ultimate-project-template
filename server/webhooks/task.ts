@@ -1,21 +1,16 @@
-import {
-  GenezioDeploy,
-  GenezioHttpResponse,
-  GenezioMethod,
-} from "@genezio/types";
+import { GenezioDeploy, GenezioHttpResponse } from "@genezio/types";
 import { TaskModel as TaskMongo } from "../db/mongoose/task";
 import { TaskModel as TaskPostgres } from "../db/sequelize/task";
 import { connectMongo } from "../db/mongoose/connect";
 import { connectPostgres } from "../db/sequelize/connect";
 
-@GenezioDeploy()
+@GenezioDeploy({ type: "http" })
 export class TaskWebhooks {
   constructor() {
     connectMongo();
     connectPostgres();
   }
 
-  @GenezioMethod({ type: "http" })
   async readTasksMongo(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
 
@@ -43,7 +38,6 @@ export class TaskWebhooks {
     };
   }
 
-  @GenezioMethod({ type: "http" })
   async readTasksPostgres(): Promise<GenezioHttpResponse> {
     // Implementation for reading tasks
 
